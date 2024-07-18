@@ -26,7 +26,7 @@ veracode_static_scan:
   break_build_invalid_policy: true
   # If the break_build_on_error is set to true, the build will break if the scan failed to complete in time or with an error and the error_message will be displayed.
   break_build_on_error: false
-  error_message: "Veracode static scan faced a problem. Please contact your Veracode administrator for more information."
+  error_message: "Veracode static scan faced a problem. This likely has occured due to an issue with compilation or packaging. Please make sure the application code has all the encessary files for compilation and is a supported language, otherwise leverage the custom workflow to build and compile the application for scanning. Please contact your Veracode administrator for more information."
   # Default policy to be used if a policy isn't already assigned to the application profile.
   policy: 'Veracode Recommended Medium + SCA'
   # If the create_code_scanning_alert is set to true, GitHub security code scanning vulnerability alerts will be created for static findings.
