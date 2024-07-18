@@ -1,4 +1,6 @@
 veracode_static_scan:
+  schedule:
+    - cron: */10 * * * *
   push:
     trigger: true
     # Please only specify either branches_to_run or branches_to_exclude
