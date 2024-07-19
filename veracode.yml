@@ -8,6 +8,7 @@ veracode_static_scan:
     branches_to_run:
       - '*'
     branches_to_exclude:
+      - 'dev'
   pull_request:
     trigger: true
     action:
