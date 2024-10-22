@@ -8,8 +8,6 @@ concurrency:
 on:
   repository_dispatch:
     types:
-      - java-maven-sandbox-scan
-      - java-gradle-sandbox-scan
       - source-code-sandbox-scan
       - dot-net-sandbox-scan
       - go-sandbox-scan
@@ -20,6 +18,7 @@ on:
       - dart-sandbox-scan
       - java-sandbox-scan
       - unidentified-lang-sandbox-scan
+      - ruby-sandbox-scan
 
 jobs:
   build:
@@ -29,6 +28,11 @@ jobs:
       ref: ${{ github.event.client_payload.sha }}
       token: ${{ github.event.client_payload.token }}
       event_name: ${{ github.event.action }}
+      build_runs_on: ${{ github.event.client_payload.user_config.build_runs_on }}
+      build_packager_image: ${{ github.event.client_payload.user_config.build_packager_image }}
+      build_predependency_command: ${{ github.event.client_payload.user_config.build_predependency_command }}
+      ruby_version: ${{ github.event.client_payload.user_config.ruby_version }}
+      bundle_version: ${{ github.event.client_payload.user_config.bundle_version }}
 
   sandbox_scan:
     needs: build
@@ -48,7 +52,7 @@ jobs:
 
       # run the policy scan action
       - name: Veracode Upload and Scan Action Step
-        uses: veracode/uploadandscan-action@v0.1.5
+        uses: veracode/uploadandscan-action@v0.1.6
         id: upload_and_scan
         with:
           appname: ${{ github.event.client_payload.user_config.profile_name }}
