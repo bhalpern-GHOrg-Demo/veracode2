@@ -49,6 +49,49 @@ jobs:
       with:
         path: 'veracode-helper'
 
+
+    - name: MacOS Message
+      if: ${{ fromJSON(inputs.build_runs_on) == 'macOs-latest' }}
+      run: |
+        echo "Please ensure that you have signed the provisioning profile of your IOS application with the settings that allow for Archival and exporting on the proper architecture defined in your Schema"
+        echo "You may specify the name of the build settings in the srcclr.yml file with the ios_configuration: and ios_scheme: parameters that will then be used with the Veracode Auto-pacakger"
+        echo "Installing Gen IR, making sure that xcodebuild tools is installed"
+        brew tap veracode/tap
+        brew install gen-ir
+        if xcodebuild --version ; then echo "XcodeBuild is installed" ; fi
+    # make sure to add a conditional step to install xcodebuild tools if they aren't already
+        
+    # TODO: place conditional in case this is for macOs
+    - name: Check for srcclr.yml
+      id: check-config-file
+      run: |
+          if [ -f ./srcclr.yml ]; then
+            echo "Configuration file found."
+          else
+            echo "Configuration file not found."
+          fi
+
+    - name: Parse YAML into environment variables
+      id: parse-yaml
+      run: |
+        # Parse YAML using yq and convert keys to uppercase with CONFIG_ prefix
+        if [ -f ./srcclr.yml ]; then
+          while IFS=":" read -r key value; do
+            upper_key=$(echo "$key" | tr '[:lower:]' '[:upper:]')                
+            echo "SRCCLR_$upper_key=$value" 
+            echo "SRCCLR_$upper_key=$value" >> $GITHUB_ENV
+          done < <(yq eval 'to_entries | .[] | "\(.key): \(.value)"' srcclr.yml)
+        fi
+      env:
+        YQ_VERSION: "v4.25.2"
+# >> $GITHUB_ENV
+
+    - name: Output SRCCLR.yml variables
+      run: |
+        echo "Parsed variables:"
+        env | grep ^SRCCLR_
+
+
     - name: Package the application
       id: application_package
       shell: bash
