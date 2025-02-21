@@ -1,0 +1,56 @@
+name: Update the Veracode Workflow App
+on:
+  schedule:
+      - cron: '0 2 * * *' # runs everyday at 2 
+  workflow_dispatch:
+jobs:
+  update-veracode-workflow:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Adding veracode repo as remote
+        run: |
+          git remote add upstream https://github.com/veracode/github-actions-integration
+          git fetch upstream
+
+      - name: Check for Changes in Specific Directory
+        id: check_changes
+        run: |
+          git diff --quiet HEAD upstream/main -- .github/workflows || echo "changes_detected=true" >> $GITHUB_ENV
+          
+      - name: Create a New Branch if Changes Exist
+        if: env.CHANGES_FOUND == 'true'
+        run: |
+          git checkout -b sync-updates
+          git merge upstream/main --no-commit --no-ff
+          git add .github/workflows
+          git commit -m "Sync updates from imported repository"
+
+      - name: Push Changes to New Branch
+        if: env.CHANGES_FOUND == 'true'
+        run: |
+          git push origin sync-updates --force
+
+      - name: Create Pull Request using GitHub CLI
+        if: env.CHANGES_FOUND == 'true'
+        run: |
+          gh pr create --title "Sync changes from imported repository" \
+                       --body "This PR updates the repository with changes from upstream." \
+                       --base main \
+                       --head sync-updates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+    #  - name: commit back to repo
+    #    run: |
+    #      git config --global user.name 'veracode'
+    #      git config --global user.email 'cli@veracode.com'
+    #      git add -A
+    #      git commit -am "New CLI Version"
+    #      git push --verbose
